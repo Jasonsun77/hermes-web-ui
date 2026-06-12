@@ -1055,11 +1055,7 @@ defineExpose({
   gap: 12px;
   padding: 4px;
   .thinking-video {
-    width: 120px;
-    height: 213px;
-    border-radius: $radius-md;
-    object-fit: contain;
-    flex-shrink: 0;
+    display: none;
   }
 }
 

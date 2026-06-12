@@ -535,6 +535,7 @@ export default {
     importSessionAlreadyExists: '会话已存在于 Web UI',
     importSessionFailed: '导入会话失败',
     rename: '重命名',
+    delete: '删除',
     pin: '置顶',
     unpin: '取消置顶',
     pinned: '已置顶',

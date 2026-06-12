@@ -581,7 +581,8 @@ const contextMenuOptions = computed(() => {
     key: "pin",
   },
   { label: t("chat.rename"), key: "rename" },
-  { label: t("chat.setWorkspace"), key: "workspace" }]
+  { label: t("chat.setWorkspace"), key: "workspace" },
+  { label: t("chat.delete"), key: "delete" }]
 
   if (contextSession.value?.source === "cli") {
     options.push({ label: t("chat.setModel"), key: "model" })
@@ -678,6 +679,9 @@ async function handleContextMenuSelect(key: string) {
     nextTick(() => {
       renameInputRef.value?.focus();
     });
+  } else if (key === "delete") {
+    showContextMenu.value = false;
+    handleDeleteSession(contextSessionId.value);
   }
 }
 

@@ -229,8 +229,22 @@ export function updateSession(id: string, data: Partial<Omit<HermesSessionRow, '
 export function deleteSession(id: string): boolean {
   if (!isSqliteAvailable()) return false
   const db = getDb()!
+  const result = db.prepare(`UPDATE ${SESSIONS_TABLE} SET deleted_at = ? WHERE id = ? AND deleted_at IS NULL`).run(Date.now(), id)
+  return result.changes > 0
+}
+
+export function restoreSession(id: string): boolean {
+  if (!isSqliteAvailable()) return false
+  const db = getDb()!
+  const result = db.prepare(`UPDATE ${SESSIONS_TABLE} SET deleted_at = NULL WHERE id = ? AND deleted_at IS NOT NULL`).run(id)
+  return result.changes > 0
+}
+
+export function permanentlyDeleteSession(id: string): boolean {
+  if (!isSqliteAvailable()) return false
+  const db = getDb()!
   db.prepare(`DELETE FROM ${MESSAGES_TABLE} WHERE session_id = ?`).run(id)
-  const result = db.prepare(`DELETE FROM ${SESSIONS_TABLE} WHERE id = ?`).run(id)
+  const result = db.prepare(`DELETE FROM ${SESSIONS_TABLE} WHERE id = ? AND deleted_at IS NOT NULL`).run(id)
   return result.changes > 0
 }
 
@@ -240,6 +254,24 @@ export function clearSessionMessages(id: string): number {
   const result = db.prepare(`DELETE FROM ${MESSAGES_TABLE} WHERE session_id = ?`).run(id)
   updateSessionStats(id)
   return Number(result.changes)
+}
+
+export function listDeletedSessions(profile?: string, limit = 200): HermesSessionRow[] {
+  if (!isSqliteAvailable()) return []
+  const db = getDb()!
+  const profileFilter = profile?.trim()
+  const sql = `
+    SELECT s.* FROM ${SESSIONS_TABLE} s
+    WHERE s.deleted_at IS NOT NULL
+    ${profileFilter ? 'AND s.profile = ?' : ''}
+    ORDER BY s.deleted_at DESC
+    LIMIT ?
+  `
+  const params: any[] = []
+  if (profileFilter) params.push(profileFilter)
+  params.push(limit)
+  const rows = db.prepare(sql).all(...params) as Record<string, unknown>[]
+  return rows.map(mapSessionRow)
 }
 
 export function renameSession(id: string, title: string): boolean {
@@ -273,6 +305,7 @@ export function listSessions(profile?: string, source?: string, limit = 2000): H
     WHERE 1 = 1
       ${profileFilter ? 'AND s.profile = ?' : ''}
       ${source ? 'AND s.source = ?' : ''}
+      AND s.deleted_at IS NULL
     ORDER BY s.last_active DESC
     LIMIT ?
   `
