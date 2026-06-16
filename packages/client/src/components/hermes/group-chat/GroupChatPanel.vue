@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useMessage, NInput, NButton, NSpace, NSelect, NPopover, NPopconfirm, NInputNumber, NDropdown, type DropdownOption } from 'naive-ui'
@@ -9,6 +9,7 @@ import { updateRoomConfig, forceCompress } from '@/api/hermes/group-chat'
 import GroupMessageList from './GroupMessageList.vue'
 import GroupChatInput from './GroupChatInput.vue'
 import ProfileAvatar from '@/components/hermes/profiles/ProfileAvatar.vue'
+import PageSidebarNav from '@/components/layout/PageSidebarNav.vue'
 import { copyToClipboard } from '@/utils/clipboard'
 import type { Attachment } from '@/stores/hermes/chat'
 import type { RoomAgent } from '@/api/hermes/group-chat'
@@ -73,6 +74,14 @@ function formatTokens(tokens: number): string {
 
 function toggleSidebar() {
     showSidebar.value = !showSidebar.value
+}
+
+function openPageSidebar() {
+    showSidebar.value = true
+}
+
+function openSettingsPage() {
+    router.push({ name: 'hermes.settings' })
 }
 
 function generateCode(): string {
@@ -236,9 +245,14 @@ async function handleAddAgent() {
 }
 
 onMounted(() => {
+    window.addEventListener('hermes:open-page-sidebar', openPageSidebar)
     if (profilesStore.profiles.length === 0) {
         void profilesStore.fetchProfiles()
     }
+})
+
+onUnmounted(() => {
+    window.removeEventListener('hermes:open-page-sidebar', openPageSidebar)
 })
 
 async function confirmAddAgent() {
@@ -339,14 +353,11 @@ async function handleApproval(choice: 'once' | 'session' | 'always' | 'deny') {
         <!-- Room sidebar -->
         <div v-if="showSidebar" class="room-sidebar">
             <div class="sidebar-header">
-                <span class="sidebar-title">{{ t('groupChat.title') }}</span>
-                <div class="sidebar-actions">
-                    <button class="icon-btn" :title="t('groupChat.createRoom')" @click="showCreateModal = true">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-                        </svg>
-                    </button>
-                </div>
+                <PageSidebarNav
+                    active="group"
+                    :primary-label="t('groupChat.createRoom')"
+                    @primary="showCreateModal = true"
+                />
             </div>
             <div class="room-list">
                 <div
@@ -378,6 +389,15 @@ async function handleApproval(choice: 'once' | 'session' | 'always' | 'deny') {
                     {{ t('groupChat.noRooms') }}
                 </div>
             </div>
+            <div class="page-sidebar-bottom">
+                <button class="page-sidebar-menu-btn" type="button" @click="openSettingsPage">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg>
+                    <span>{{ t('sidebar.settings') }}</span>
+                </button>
+            </div>
         </div>
 
         <NDropdown
@@ -394,7 +414,7 @@ async function handleApproval(choice: 'once' | 'session' | 'always' | 'deny') {
         <!-- Main chat area -->
         <div class="chat-main">
             <div class="chat-header">
-                <button class="icon-btn" @click="toggleSidebar">
+                <button class="icon-btn header-sidebar-toggle" @click="toggleSidebar">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="9" y1="3" x2="9" y2="21" />
                     </svg>
@@ -855,7 +875,7 @@ export default defineComponent({ components: { CreateRoomForm } })
 .approval-float-actions {
     display: flex;
     flex-wrap: wrap;
-    justify-content: flex-end;
+    justify-content: flex-start;
     gap: 8px;
     margin-top: 10px;
     padding: 10px 4px 0;
@@ -927,7 +947,7 @@ export default defineComponent({ components: { CreateRoomForm } })
 // ─── Room Sidebar ────────────────────────────────────────
 
 .room-sidebar {
-    width: 220px;
+    width: $sidebar-width;
     flex-shrink: 0;
     border-right: 1px solid $border-color;
     display: flex;
@@ -935,21 +955,80 @@ export default defineComponent({ components: { CreateRoomForm } })
 }
 
 .sidebar-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
     padding: 12px;
     flex-shrink: 0;
+}
 
-    .sidebar-title {
-        font-size: 15px;
-        font-weight: 600;
+.page-sidebar-tab {
+    width: 100%;
+    min-width: 0;
+    height: 34px;
+    border: none;
+    border-radius: $radius-sm;
+    background: transparent;
+    color: $text-secondary;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 7px 10px;
+    cursor: pointer;
+    transition:
+        background-color $transition-fast,
+        color $transition-fast;
+
+    svg {
+        flex-shrink: 0;
+    }
+
+    span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 13px;
+        line-height: 18px;
+    }
+
+    &:hover {
+        background: rgba(var(--accent-primary-rgb), 0.06);
+        color: $text-primary;
+    }
+}
+
+.conversation-switch {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2px;
+    margin: 0 12px 8px;
+    padding: 2px;
+    border-radius: $radius-sm;
+    background: rgba(var(--accent-primary-rgb), 0.05);
+    flex-shrink: 0;
+}
+
+.conversation-switch-tab {
+    min-width: 0;
+    height: 28px;
+    border: none;
+    border-radius: 5px;
+    background: transparent;
+    color: $text-secondary;
+    font-size: 12px;
+    line-height: 16px;
+    cursor: pointer;
+    transition:
+        background-color $transition-fast,
+        color $transition-fast;
+
+    &:hover {
         color: $text-primary;
     }
 
-    .sidebar-actions {
-        display: flex;
-        gap: 4px;
+    &.active {
+        background: $bg-card;
+        color: $text-primary;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
     }
 }
 
@@ -1043,6 +1122,44 @@ export default defineComponent({ components: { CreateRoomForm } })
     text-align: center;
     font-size: 13px;
     color: $text-muted;
+}
+
+.page-sidebar-bottom {
+    flex-shrink: 0;
+    padding: 10px 12px;
+}
+
+.page-sidebar-menu-btn {
+    width: 100%;
+    min-width: 0;
+    height: 36px;
+    border: none;
+    border-radius: $radius-sm;
+    background: transparent;
+    color: $text-secondary;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 8px 10px;
+    cursor: pointer;
+    transition:
+        background-color $transition-fast,
+        color $transition-fast;
+
+    &:hover {
+        background: rgba(var(--accent-primary-rgb), 0.06);
+        color: $text-primary;
+    }
+
+    span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 13px;
+        line-height: 18px;
+    }
 }
 
 // ─── Chat Main ──────────────────────────────────────────
@@ -1351,5 +1468,10 @@ export default defineComponent({ components: { CreateRoomForm } })
     .chat-header {
         padding: 16px 12px 16px 52px;
     }
+
+    .header-sidebar-toggle {
+        display: none;
+    }
+
 }
 </style>

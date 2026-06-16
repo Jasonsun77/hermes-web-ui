@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, computed, watch } from 'vue'
+import { onUnmounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { darkTheme, NConfigProvider, NMessageProvider, NDialogProvider, NNotificationProvider } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
@@ -22,6 +22,11 @@ const themeOverrides = computed(() => getThemeOverrides(isDark.value, isComic.va
 const naiveTheme = computed(() => isDark.value ? darkTheme : null)
 
 const isLoginPage = computed(() => route.name === 'login')
+const usesPageSidebar = computed(() =>
+  ['hermes.chat', 'hermes.session', 'hermes.history', 'hermes.historySession', 'hermes.globalAgent', 'hermes.globalAgentSession', 'hermes.groupChat', 'hermes.groupChatRoom'].includes(route.name as string),
+)
+const showAppSidebar = computed(() => !isLoginPage.value && !usesPageSidebar.value)
+const showMobileMenuButton = computed(() => !isLoginPage.value && (showAppSidebar.value || usesPageSidebar.value))
 
 const nodeVersionLow = computed(() => {
   const v = appStore.nodeVersion
@@ -32,17 +37,28 @@ const nodeVersionLow = computed(() => {
 const isDesktopShell = computed(() =>
   (window as typeof window & { hermesDesktop?: { isDesktop?: boolean } }).hermesDesktop?.isDesktop === true,
 )
-
-// Close mobile sidebar on route change
-watch(() => route.path, () => {
-  appStore.closeSidebar()
+const hasDesktopTitleBar = computed(() => {
+  const platform = (window as typeof window & { hermesDesktop?: { platform?: string } }).hermesDesktop?.platform
+  return isDesktopShell.value && (platform === 'darwin' || platform === 'win32')
 })
 
-onMounted(() => {
-  if (!isLoginPage.value) {
-    appStore.loadModels()
-    appStore.startHealthPolling()
+function handleMobileMenuClick() {
+  if (usesPageSidebar.value) {
+    window.dispatchEvent(new CustomEvent('hermes:open-page-sidebar'))
+    return
   }
+  appStore.toggleSidebar()
+}
+
+watch(isLoginPage, (loginPage) => {
+  if (loginPage) {
+    appStore.stopHealthPolling()
+    return
+  }
+  appStore.loadModels()
+  appStore.startHealthPolling()
+}, {
+  immediate: true,
 })
 
 onUnmounted(() => {
@@ -58,17 +74,17 @@ useKeyboard()
       <AuthEventListener />
       <NDialogProvider>
         <NNotificationProvider>
-          <div class="app-shell" :class="{ desktop: isDesktopShell }">
+          <div class="app-shell" :class="{ desktop: isDesktopShell, 'desktop-titlebar-host': hasDesktopTitleBar }">
             <DesktopTitleBar v-if="isDesktopShell" />
             <div v-if="nodeVersionLow" class="node-warning-bar">
               {{ t('sidebar.nodeVersionWarning', { version: appStore.nodeVersion }) }}
             </div>
-            <div class="app-layout" :class="{ 'no-sidebar': isLoginPage }">
-              <button v-if="!isLoginPage" class="hamburger-btn" @click="appStore.toggleSidebar">
+            <div class="app-layout" :class="{ 'no-sidebar': isLoginPage || !showAppSidebar }">
+              <button v-if="showMobileMenuButton" class="hamburger-btn" @click="handleMobileMenuClick">
                 <img src="/logo.png" alt="Menu" style="width: 24px; height: 24px;" />
               </button>
-              <div v-if="!isLoginPage && appStore.sidebarOpen" class="mobile-backdrop" @click="appStore.closeSidebar" />
-              <AppSidebar v-if="!isLoginPage" />
+              <div v-if="!isLoginPage && showAppSidebar && appStore.sidebarOpen" class="mobile-backdrop" @click="appStore.closeSidebar" />
+              <AppSidebar v-if="!isLoginPage && showAppSidebar" />
               <main class="app-main">
                 <router-view />
               </main>
@@ -108,7 +124,7 @@ useKeyboard()
   }
 }
 
-.app-shell.desktop .app-layout {
+.app-shell.desktop-titlebar-host .app-layout {
   --vh: calc(1vh - 0.36px);
 }
 

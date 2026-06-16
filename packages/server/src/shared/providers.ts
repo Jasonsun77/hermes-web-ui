@@ -54,7 +54,9 @@ export const PROVIDER_PRESETS: ProviderPreset[] = [
     value: 'anthropic',
     builtin: true,
     base_url: 'https://api.anthropic.com',
+    api_mode: 'anthropic_messages',
     models: [
+      'claude-fable-5',
       'claude-opus-4-8',
       'claude-opus-4-7',
       'claude-opus-4-6',
@@ -67,6 +69,21 @@ export const PROVIDER_PRESETS: ProviderPreset[] = [
     ],
   },
   {
+    label: 'Claude OAuth',
+    value: 'claude-oauth',
+    builtin: true,
+    base_url: 'https://api.anthropic.com',
+    api_mode: 'anthropic_messages',
+    models: [
+      'claude-fable-5',
+      'claude-opus-4-8',
+      'claude-opus-4-7',
+      'claude-opus-4-6',
+      'claude-sonnet-4-6',
+      'claude-haiku-4-5',
+    ],
+  },
+  {
     label: 'Google AI Studio',
     value: 'gemini',
     builtin: true,
@@ -76,6 +93,17 @@ export const PROVIDER_PRESETS: ProviderPreset[] = [
       'gemini-3-pro-preview',
       'gemini-3-flash-preview',
       'gemini-3.1-flash-lite-preview',
+    ],
+  },
+  {
+    label: 'Google Gemini OAuth',
+    value: 'google-gemini-cli',
+    builtin: true,
+    base_url: 'cloudcode-pa://google',
+    models: [
+      'gemini-3.1-pro-preview',
+      'gemini-3-pro-preview',
+      'gemini-3-flash-preview',
     ],
   },
   {
@@ -454,7 +482,7 @@ export const PROVIDER_PRESETS: ProviderPreset[] = [
     value: 'openai-codex',
     builtin: true,
     base_url: 'https://chatgpt.com/backend-api/codex',
-    models: ['gpt-5.5', 'gpt-5.4-mini', 'gpt-5.4', 'gpt-5.3-codex', 'gpt-5.3-codex-spark'],
+    models: ['gpt-5.5', 'gpt-5.4-mini'],
   },
   {
     label: 'OpenAI API',
