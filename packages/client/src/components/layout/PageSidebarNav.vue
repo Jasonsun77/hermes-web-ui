@@ -39,6 +39,10 @@ function openHistory() {
   void router.push({ name: 'hermes.history' })
 }
 
+function openTrash() {
+  void router.push({ name: 'hermes.trash' })
+}
+
 function openGroupChat() {
   if (props.active === 'group') return
   void router.push({ name: 'hermes.groupChat' })
@@ -118,6 +122,22 @@ function openApiRelay() {
           <path d="M12 7v5l3 2" />
         </svg>
         <span>{{ historyButtonLabel }}</span>
+      </button>
+      <button class="page-sidebar-tab" type="button" @click="openTrash">
+        <svg
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polyline points="3 6 5 6 21 6" />
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+        </svg>
+        <span>{{ t('sidebar.trash') }}</span>
       </button>
       <button class="page-sidebar-tab" type="button" @click="openApiRelay">
         <svg

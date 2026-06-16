@@ -233,6 +233,7 @@ export default {
     changelog: '更新日志',
     noChangelog: '暂无更新日志',
     versionManagement: '版本管理',
+    trash: '回收站',
   },
 
   runtimeVersions: {
@@ -2127,5 +2128,21 @@ export default {
     new_0_6_10_8: 'OpenAPI 文档补充头像、辅助模型配置、Provider 模型缓存刷新和 Hermes 会话导入端点',
     new_0_6_10_9: '记忆备注现在可以保存为空内容，清空个人备注时不会再保存失败',
     new_0_6_10_10: '仓库 harness 文档现在会追踪 Chat 链路变更，bridge 和 chat runtime 更新需要先记录后才能通过 CI',
+  },
+
+  trash: {
+    title: '回收站',
+    empty: '暂无已删除的会话。',
+    count: '共 {count} 个会话',
+    restore: '恢复',
+    restoreSuccess: '会话已恢复',
+    restoreFailed: '恢复失败',
+    permanentDelete: '永久删除',
+    permanentDeleteSuccess: '已永久删除',
+    permanentDeleteFailed: '永久删除失败',
+    permanentDeleteConfirm: '此操作不可撤销，确定要永久删除吗？',
+    confirmPermanentDelete: '删除',
+    loadFailed: '加载回收站失败',
+    untitled: '未命名',
   },
 }

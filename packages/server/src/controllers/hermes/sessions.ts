@@ -12,6 +12,9 @@ import {
   updateSession as localUpdateSession,
   updateSessionStats as localUpdateSessionStats,
   listDeletedSessionIds,
+  listDeletedSessions as localListDeletedSessions,
+  restoreSession as localRestoreSession,
+  permanentlyDeleteSession as localPermanentDeleteSession,
 } from '../../db/hermes/session-store'
 import { ExportCompressor } from '../../lib/context-compressor/export-compressor'
 import { deleteUsage, getUsage, getUsageBatch } from '../../db/hermes/usage-store'
@@ -1090,4 +1093,48 @@ export async function getConversationMessagesPaginated(ctx: any) {
     limit: result.limit,
     hasMore: result.hasMore,
   }
+}
+
+/**
+ * List deleted (soft-deleted) sessions - the recycle bin
+ * GET /api/hermes/sessions/deleted
+ */
+export async function listDeleted(ctx: any) {
+  const profile = ctx.query.profile as string | undefined
+  const limit = ctx.query.limit ? parseInt(ctx.query.limit as string, 10) : 200
+  const sessions = localListDeletedSessions(profile, limit)
+  ctx.body = { sessions }
+}
+
+/**
+ * Restore a soft-deleted session
+ * POST /api/hermes/sessions/:id/restore
+ */
+export async function restore(ctx: any) {
+  const sessionId = ctx.params.id
+  const ok = localRestoreSession(sessionId)
+  if (!ok) {
+    ctx.status = 404
+    ctx.body = { error: 'Session not found or not deleted' }
+    return
+  }
+  ctx.body = { ok: true }
+}
+
+/**
+ * Permanently delete a soft-deleted session
+ * DELETE /api/hermes/sessions/:id/permanent
+ */
+export async function permanentDelete(ctx: any) {
+  const sessionId = ctx.params.id
+  const existing = localGetSession(sessionId)
+  if (denySessionAccess(ctx, existing)) return
+  deleteUsage(sessionId)
+  const ok = localPermanentDeleteSession(sessionId)
+  if (!ok) {
+    ctx.status = 404
+    ctx.body = { error: 'Session not found or not deleted' }
+    return
+  }
+  ctx.body = { ok: true }
 }

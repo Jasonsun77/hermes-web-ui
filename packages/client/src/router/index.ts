@@ -150,6 +150,11 @@ const router = createRouter({
       component: () => import('@/views/hermes/McpManagerView.vue'),
       meta: { requiresSuperAdmin: true },
     },
+    {
+      path: '/hermes/trash',
+      name: 'hermes.trash',
+      component: () => import('@/views/hermes/TrashView.vue'),
+    },
   ],
 })
 

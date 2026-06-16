@@ -312,3 +312,39 @@ export async function fetchContextLength(profile?: string, provider?: string, mo
   const res = await request<{ context_length: number }>(`/api/hermes/sessions/context-length${query ? `?${query}` : ''}`)
   return res.context_length
 }
+
+/**
+ * Fetch deleted sessions (recycle bin)
+ */
+export async function fetchDeletedSessions(profile?: string, limit?: number): Promise<SessionSummary[]> {
+  const params = new URLSearchParams()
+  if (profile) params.set('profile', profile)
+  if (limit) params.set('limit', String(limit))
+  const query = params.toString()
+  const res = await request<{ sessions: SessionSummary[] }>(`/api/hermes/sessions/deleted${query ? `?${query}` : ''}`)
+  return res.sessions
+}
+
+/**
+ * Restore a soft-deleted session
+ */
+export async function restoreSession(id: string): Promise<boolean> {
+  try {
+    await request(`/api/hermes/sessions/${id}/restore`, { method: 'POST' })
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Permanently delete a soft-deleted session
+ */
+export async function permanentDeleteSession(id: string): Promise<boolean> {
+  try {
+    await request(`/api/hermes/sessions/${id}/permanent`, { method: 'DELETE' })
+    return true
+  } catch {
+    return false
+  }
+}

@@ -8563,6 +8563,50 @@
         ]
       }
     },
+    "/api/hermes/sessions/deleted": {
+      "get": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Get deleted",
+        "description": "GET /api/hermes/sessions/deleted",
+        "operationId": "listDeleted",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        },
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "profile",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
     "/api/hermes/sessions/hermes": {
       "get": {
         "tags": [
@@ -8953,6 +8997,39 @@
         }
       }
     },
+    "/api/hermes/sessions/{id}/permanent": {
+      "delete": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Delete permanent",
+        "description": "DELETE /api/hermes/sessions/:id/permanent",
+        "operationId": "permanentDelete",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
     "/api/hermes/sessions/{id}/rename": {
       "post": {
         "tags": [
@@ -9005,6 +9082,42 @@
             }
           }
         }
+      }
+    },
+    "/api/hermes/sessions/{id}/restore": {
+      "post": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Create restore",
+        "description": "POST /api/hermes/sessions/:id/restore",
+        "operationId": "restore",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
       }
     },
     "/api/hermes/sessions/{id}/usage": {

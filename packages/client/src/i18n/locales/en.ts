@@ -233,6 +233,7 @@ export default {
     changelog: 'Changelog',
     noChangelog: 'No changelog available',
     versionManagement: 'Version Management',
+    trash: 'Recycle Bin',
   },
 
   runtimeVersions: {
@@ -2124,5 +2125,21 @@ export default {
     new_0_6_10_8: 'OpenAPI docs now include avatar, auxiliary model config, provider model cache refresh, and Hermes session import endpoints',
     new_0_6_10_9: 'Memory notes can now be saved with empty content, making it possible to clear personal notes without a failed save',
     new_0_6_10_10: 'Repository harness docs now track chat-chain changes so bridge and chat-runtime updates are documented before CI passes',
+  },
+
+  trash: {
+    title: 'Recycle Bin',
+    empty: 'No deleted sessions.',
+    count: '{count} session(s)',
+    restore: 'Restore',
+    restoreSuccess: 'Session restored',
+    restoreFailed: 'Failed to restore session',
+    permanentDelete: 'Delete permanently',
+    permanentDeleteSuccess: 'Session permanently deleted',
+    permanentDeleteFailed: 'Failed to permanently delete session',
+    permanentDeleteConfirm: 'This action cannot be undone. Continue?',
+    confirmPermanentDelete: 'Delete',
+    loadFailed: 'Failed to load deleted sessions',
+    untitled: 'Untitled',
   },
 }
