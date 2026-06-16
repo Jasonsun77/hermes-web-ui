@@ -1325,11 +1325,11 @@ box-sizing: border-box;
 
   100% {
     background-position: 0% 0;
+  }
+}
 
-  .thinking-video {
-    display: none;
-  }
-  }
+.thinking-video {
+  display: none;
 }
 
 .tool-calls-panel {
