@@ -278,6 +278,13 @@ export function listDeletedSessions(profile?: string, limit = 200): HermesSessio
   return rows.map(mapSessionRow)
 }
 
+export function listDeletedSessionIds(): Set<string> {
+  if (!isSqliteAvailable()) return new Set()
+  const db = getDb()!
+  const rows = db.prepare(`SELECT id FROM ${SESSIONS_TABLE} WHERE deleted_at IS NOT NULL`).all() as Array<{ id: string }>
+  return new Set(rows.map(r => r.id))
+}
+
 export function renameSession(id: string, title: string): boolean {
   if (!isSqliteAvailable()) return false
   const db = getDb()!

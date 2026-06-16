@@ -11,6 +11,7 @@ import {
   addMessages as localAddMessages,
   updateSession as localUpdateSession,
   updateSessionStats as localUpdateSessionStats,
+  listDeletedSessionIds,
 } from '../../db/hermes/session-store'
 import { ExportCompressor } from '../../lib/context-compressor/export-compressor'
 import { deleteUsage, getUsage, getUsageBatch } from '../../db/hermes/usage-store'
@@ -387,7 +388,9 @@ export async function listHermesSessions(ctx: any) {
   const effectiveLimit = limit && limit > 0 ? limit : 2000
 
   const importedIds = new Set(localListSessions(profile, undefined, effectiveLimit).map(session => session.id))
+  const deletedIds = listDeletedSessionIds()
   const allSessions = (await listSessionSummaries(source, effectiveLimit, profile))
+    .filter(session => !deletedIds.has(session.id))
     .map(session => ({
       ...(profile ? { ...session, profile } : session),
       webui_imported: importedIds.has(session.id),
@@ -566,9 +569,7 @@ export async function remove(ctx: any) {
   const hermesProfile = requestedProfile(ctx) || existing?.profile || getActiveProfileName()
   const codingAgentSession = isCodingAgentSession(existing)
   if (codingAgentSession) codingAgentRunManager.stop(sessionId, { reportClosed: false })
-  const hermes = codingAgentSession
-    ? { attempted: false, deleted: false, profile: hermesProfile }
-    : await deleteHermesSessionIfPresent(sessionId, hermesProfile)
+  // Soft delete locally only — do NOT call Hermes CLI to avoid hard-deleting state.db.
   const localDeleted = existing ? localDeleteSession(sessionId) : true
   if (!localDeleted) {
     ctx.status = 500
@@ -576,7 +577,7 @@ export async function remove(ctx: any) {
     return
   }
   deleteUsage(sessionId)
-  ctx.body = { ok: true, deleted: Boolean(existing), hermes }
+  ctx.body = { ok: true, deleted: Boolean(existing), hermes: { attempted: false, deleted: false, profile: hermesProfile } }
 }
 
 export async function batchRemove(ctx: any) {
@@ -636,16 +637,7 @@ export async function batchRemove(ctx: any) {
 
     const codingAgentSession = isCodingAgentSession(existing)
     if (codingAgentSession) codingAgentRunManager.stop(id, { reportClosed: false })
-    const hermes = codingAgentSession
-      ? { attempted: false, deleted: false, profile: targetProfile || 'default' }
-      : await deleteHermesSessionIfPresent(id, targetProfile)
-    if (hermes.deleted) {
-      results.hermesDeleted++
-    } else if (hermes.attempted && hermes.error) {
-      results.hermesFailed++
-      results.hermesErrors.push({ id, profile: hermes.profile, error: hermes.error })
-    }
-
+    // Soft delete locally only — do NOT call Hermes CLI to avoid hard-deleting state.db.
     const shouldDeleteLocal = Boolean(existing && (!targetProfile || existing.profile === targetProfile))
     if (shouldDeleteLocal) {
       const ok = localDeleteSession(id)
@@ -656,8 +648,6 @@ export async function batchRemove(ctx: any) {
         results.failed++
         results.errors.push({ id, error: 'Failed to delete session' })
       }
-    } else if (hermes.deleted) {
-      results.deleted++
     } else {
       results.failed++
       results.errors.push({ id, error: 'Session not found' })
